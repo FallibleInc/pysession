@@ -6,7 +6,7 @@ Automatically save python interpreter code to a file or secret Gist. You can tur
 
 ``` bash
 pip install pysession
-echo 'export PYTHONSTARTUP=~/.pysession/pysession.py' >> ~/.bashrc
+echo 'export PYTHONSTARTUP=$HOME/.pysession/pysession.py' >> ~/.bashrc
 ```
 
 If you are using zsh replace `.bashrc` in the above line with `.zshrc` and similarly for any other shell.

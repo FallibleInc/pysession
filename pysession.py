@@ -94,7 +94,7 @@ class PySession(object):
             PySession.previous_sessions = pickle.load(
                 io.open(SESSIONS_STORAGE, 'rb'))
         stdout.write(LAST_GISTS)
-        for session_url in previous_sessions:
+        for session_url in PySession.previous_sessions:
             stdout.write('\t' + session_url + '\n')
 
     @classmethod

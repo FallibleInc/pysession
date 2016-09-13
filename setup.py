@@ -1,4 +1,17 @@
+from __future__ import print_function
 from setuptools import setup
+import os
+from os.path import exists, expanduser
+from shutil import copyfile
+
+ROOT = os.path.abspath(os.path.dirname(__file__))
+
+print(ROOT)
+
+if not os.path.exists(expanduser('~') + '/.pysession'):
+    os.makedirs(expanduser('~') + '/.pysession')
+
+copyfile(ROOT + '/pysession.py', expanduser('~') + '/.pysession/pysession.py')
 
 
 setup(
