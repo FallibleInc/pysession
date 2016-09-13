@@ -2,6 +2,8 @@
 
 Automatically save python interpreter code to a file or secret Gist. You can turn this off for any session. Helpful when you want to share a piece of code you just hacked on the shell or wanted to save it in a file for use later.
 
+![Pysession demo](./pysession_demo.gif)
+
 #### Installation steps
 
 ``` bash
