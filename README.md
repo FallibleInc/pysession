@@ -9,7 +9,7 @@ pip install pysession
 echo 'export PYTHONSTARTUP=$HOME/.pysession/pysession.py' >> ~/.bashrc
 ```
 
-If you are using zsh replace `.bashrc` in the above line with `.zshrc` and similarly for any other shell.
+If you are using zsh replace `.bashrc` in the above line with `.zshrc` and similarly for any other shell. On macOS, you should append this to `~/.bash_profile`
 
 #### How to use
 
