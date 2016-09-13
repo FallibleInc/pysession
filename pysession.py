@@ -23,7 +23,6 @@ except ImportError:
     import urllib.request as urllib
 
 
-
 stdout.write('''
     \033[95m
     -----------------------------------------------\n
@@ -63,7 +62,7 @@ class PySession(object):
 
     @classmethod
     def save_to_file(cls, data, filename=None):
-        """ Saves the session code to a local file in current directory """
+        """Saves the session code to a local file in current directory"""
         filename = filename or str(time.time()) + '.py'
         file_p = io.open(filename, 'wb')
         file_p.write(data)
@@ -71,7 +70,7 @@ class PySession(object):
 
     @classmethod
     def save_to_gist(cls, data, filename=None):
-        """ Creates an anonymous GitHub Gist with the provided data and filename """
+        """Creates a secret GitHub Gist with the provided data and filename"""
         filename = filename or str(time.time())
         date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
         gist = {
@@ -92,7 +91,8 @@ class PySession(object):
     @classmethod
     def load_history_urls(cls):
         if isfile(SESSIONS_STORAGE):
-            PySession.previous_sessions = pickle.load(io.open(SESSIONS_STORAGE, 'rb'))
+            PySession.previous_sessions = pickle.load(
+                io.open(SESSIONS_STORAGE, 'rb'))
         stdout.write(LAST_GISTS)
         for session_url in previous_sessions:
             stdout.write('\t' + session_url + '\n')
@@ -118,28 +118,30 @@ def init():
         PySession.start_index = len(PySession.ipython_history)
 
         def custom_hook(shell, etype, evalue, traceback, tb_offset=None):
-            PySession.wrong_code_lines.append(len(PySession.ipython_history)-1)
+            PySession.wrong_code_lines.append(
+                len(PySession.ipython_history) - 1)
             shell.showtraceback((etype, evalue, traceback),
                                 tb_offset=tb_offset)
 
         get_ipython().set_custom_exc((Exception,), custom_hook)
     else:
-        readline.add_history('') # A hack for a strange bug in 3 < Py <3.5.2
+        readline.add_history('')  # A hack for a strange bug in 3 < Py <3.5.2
         PySession.start_index = readline.get_current_history_length() + 1
 
         default_hook = sys.excepthook
 
         def custom_hook(etype, evalue, traceback):
-            PySession.wrong_code_lines.append(readline.get_current_history_length())
+            PySession.wrong_code_lines.append(
+                readline.get_current_history_length())
             default_hook(etype, evalue, traceback)
 
         sys.excepthook = custom_hook
 
 
 def process_history():
-    "Processes history according to interpreter type and returns an array of code lines"
+    """Processes python sheell history to an array of code lines"""
     end_index = len(PySession.ipython_history) - 1 if PySession.is_ipython \
-                     else readline.get_current_history_length()
+        else readline.get_current_history_length()
 
     lines_of_code = []
     for i in range(PySession.start_index, end_index):
@@ -149,11 +151,12 @@ def process_history():
             line = PySession.ipython_history[i]
         else:
             line = readline.get_history_item(i)
-        if line.strip() in ['exit' or 'exit()']: # remove 'exit' from code
+        if line.strip() in ['exit' or 'exit()']:  # remove 'exit' from code
             continue
         lines_of_code.append(line)
 
-    if len(lines_of_code) > 0 and lines_of_code[-1] != '\n': # adding extra last newline
+    if len(
+            lines_of_code) > 0 and lines_of_code[-1] != '\n':  # adding extra last newline
         lines_of_code.append('\n')
 
     return lines_of_code
