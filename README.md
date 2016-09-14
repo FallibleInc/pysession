@@ -1,6 +1,8 @@
 ### Pysession
 
-Automatically save python interpreter code to a file or secret Gist. You can turn this off for any session. Helpful when you want to share a piece of code you just hacked on the shell or wanted to save it in a file for use later.
+Automatically save python interpreter code to a file or secret Gist. You can turn this off for any session. Helpful when you want to share a piece of code you just hacked on the shell or wanted to save it in a file for use later. 
+
+Tested with IPython, Python2 & Python3 default shells.
 
 ![Pysession demo](./pysession_demo.gif)
 
