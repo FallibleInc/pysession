@@ -16,12 +16,12 @@ copyfile(ROOT + '/pysession.py', expanduser('~') + '/.pysession/pysession.py')
 
 setup(
     name='pysession',
-    version='0.1',
+    version='0.1.1',
     description='Automatically save python interpreter session code to a file or secret Gist',
     author='Fallible',
     author_email='hello@fallible.co',
     url='https://github.com/FallibleInc/pysession',
-    download_url='https://github.com/FallibleInc/pysession/tarball/0.1',
+    download_url='https://github.com/FallibleInc/pysession/tarball/0.1.1',
     py_modules=['pysession'],
     install_requires=[],
     classifiers=[
