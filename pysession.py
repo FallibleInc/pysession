@@ -1,6 +1,6 @@
 """
 A python history_startup script that persists your work in a Python shell like IDLE
-or PySession.is_ipython.
+or IPython.
 This script saves your work to a secret Gist on Github or to a local file.
 """
 
