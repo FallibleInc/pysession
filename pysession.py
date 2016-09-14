@@ -14,7 +14,6 @@ import webbrowser
 import datetime
 import json
 import codecs
-import time
 import pickle
 
 try:
@@ -23,21 +22,12 @@ except ImportError:
     import urllib.request as urllib
 
 
-stdout.write('''
-    \033[95m
-    -----------------------------------------------\n
-    This interpreter session will be saved to a secret Gist.\n
-    You can stop saving this session by typing \033[1mPySession.off()\033[0m\033[95m\n
-    To save locally on your disk instead of Gist type \033[1mPySession.local()\033[0m\033[95m\n
-    ------------------------------------------------\n\033[0m''')
-
-
 DO_NOTHING = '\033[95m Nothing to export to Gist. Exiting. \n\033[0m'
 SAVING_GIST = '\033[95m Saving your session to a secret Gist.. \n\033[0m'
 SAVING_FILE = '\033[95m Saving your session to a local file in current directory. \n\033[0m'
 SUCCESS = '\033[95m Saved your session successfully! \n\033[0m'
 FAILED = '\033[95m Could not save to Gist. Saving to local file. \n\033[0m'
-GIST_DESCRIPTION = 'Exported from a Python REPL at '
+GIST_DESCRIPTION = 'Exported from a Python Shell using pysession at '
 GIST_API_URL = 'https://api.github.com/gists'
 SESSIONS_STORAGE = expanduser('~') + '/.pysession.pickle'
 LAST_GISTS = '\033[95m    LAST 5 EXPORTED GISTS: \n\033[0m'
@@ -54,16 +44,18 @@ class PySession(object):
 
     @classmethod
     def off(cls):
+        """ Turns off saving for this particular shell session """
         cls.save = False
 
     @classmethod
     def local(cls):
+        """ Switch to saving the current session to a local file """
         cls.save_locally = True
 
     @classmethod
     def save_to_file(cls, data, filename=None):
         """Saves the session code to a local file in current directory"""
-        filename = filename or str(time.time()) + '.py'
+        filename = filename or 'session.py'
         file_p = io.open(filename, 'wb')
         file_p.write(data)
         file_p.close()
@@ -71,12 +63,12 @@ class PySession(object):
     @classmethod
     def save_to_gist(cls, data, filename=None):
         """Creates a secret GitHub Gist with the provided data and filename"""
-        filename = filename or str(time.time())
+        filename = filename or 'session.py'
         date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
         gist = {
             'description': GIST_DESCRIPTION + date,
             'public': False,
-            'files': {'gist_' + filename + '.py': {'content': data}}
+            'files': {filename: {'content': data}}
         }
 
         headers = {'Content-Type': 'application/json'}
@@ -90,6 +82,7 @@ class PySession(object):
 
     @classmethod
     def load_history_urls(cls):
+        """ Loads Gist URLs of past sessions from a pickle file """
         if isfile(SESSIONS_STORAGE):
             PySession.previous_sessions = pickle.load(
                 io.open(SESSIONS_STORAGE, 'rb'))
@@ -106,6 +99,14 @@ class PySession(object):
 
 
 def init():
+    stdout.write('''
+    \033[95m
+    -----------------------------------------------\n
+    This interpreter session will be saved to a secret Gist.\n
+    You can stop saving this session by typing \033[1mPySession.off()\033[0m\033[95m\n
+    To save locally on your disk instead of Gist type \033[1mPySession.local()\033[0m\033[95m\n
+    ------------------------------------------------\n\033[0m''')
+
     PySession.load_history_urls()
     try:
         from IPython import get_ipython
