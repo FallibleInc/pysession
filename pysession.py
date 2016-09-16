@@ -65,11 +65,13 @@ class PySession(object):
     @classmethod
     def local(cls):
         """Switch to saving the current session to a local file."""
+        cls.save = True
         cls.save_locally = True
 
     @classmethod
     def gist(cls):
         """Switch to saving the current session to a secret gist."""
+        cls.save = True
         cls.save_locally = False
 
     @classmethod
@@ -171,7 +173,7 @@ def init():
 
 
 def process_history():
-    """Processes python sheell history to an array of code lines"""
+    """Processes python shell history to an array of code lines"""
     end_index = len(PySession.ipython_history) - 1 if PySession.is_ipython \
         else readline.get_current_history_length()
 
@@ -183,7 +185,13 @@ def process_history():
             line = PySession.ipython_history[i]
         else:
             line = readline.get_history_item(i)
-        if line.strip() in ['exit' or 'exit()']:  # remove 'exit' from code
+
+        # remove 'exit' and PySession keywords from code
+        if line.strip() in ['PySession.local()',
+                            'PySession.gist()',
+                            'PySession.off()',
+                            'exit',
+                            'exit()']:
             continue
         lines_of_code.append(line)
 

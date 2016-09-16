@@ -25,8 +25,27 @@ By default, Pysession will record each shell run and save to a Gist. However it 
 >>> PySession.off()
 ```
 
+Alternatively, to persist your choice of not saving sessions for some extended period of time, set an environment variable PYSESSION_SAVE_OFF to True. 
+`export PYSESSION_SAVE_OFF=True`
+
+
+##### To turn back on saving for a session
+
+``` python
+>>> PySession.on()
+```
+
+
 ##### To save to a local file instead of Gist
 
 ``` python
 >>> PySession.local()
 ```
+
+To always save your sessions to local file, set an environment variable PYSESSION_SAVE_LOCALLY to True. 
+`export PYSESSION_SAVE_LOCALLY=True`
+
+The file is saved with a name `session.py` You can change this by setting the environment variable PYSESSION_FILENAME to your desired filename. 
+`export PYSESSION_FILENAME=some_file_name.py`
+
+
