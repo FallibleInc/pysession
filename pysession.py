@@ -1,20 +1,21 @@
-"""
-A python history_startup script that persists your work in a Python shell like IDLE
-or IPython.
+"""A Python history_startup script that persists your work in a Python shell like IDLE or IPython.
+
 This script saves your work to a secret Gist on Github or to a local file.
 """
 
-import io
-from os.path import expanduser, isfile
-from sys import stdout
-import sys
 import atexit
-import readline
-import webbrowser
-import datetime
-import json
 import codecs
+import datetime
+import io
+import json
+import os
 import pickle
+import readline
+import sys
+import webbrowser
+
+from os.path import expanduser, isfile, join
+from sys import stdout
 
 try:
     import urllib2 as urllib
@@ -22,15 +23,24 @@ except ImportError:
     import urllib.request as urllib
 
 
-DO_NOTHING = '\033[95m Nothing to export to Gist. Exiting. \n\033[0m'
-SAVING_GIST = '\033[95m Saving your session to a secret Gist.. \n\033[0m'
-SAVING_FILE = '\033[95m Saving your session to a local file in current directory. \n\033[0m'
-SUCCESS = '\033[95m Saved your session successfully! \n\033[0m'
-FAILED = '\033[95m Could not save to Gist. Saving to local file. \n\033[0m'
+DO_NOTHING = '\033[95mNothing to save in this session. Exiting. \n\033[0m'
+SAVING_GIST = "\033[95mSaving your session to a secret Gist as '{filename}'. \n\033[0m"
+SAVING_FILE = "\033[95mSaving your session to local file '{filename}'.\n\033[0m"
+SUCCESS = '\033[95mSaved your session successfully!\n\033[0m'
+FAILED = '\033[95mCould not save to Gist. Saving to local file.\n\033[0m'
 GIST_DESCRIPTION = 'Exported from a Python Shell using pysession at '
 GIST_API_URL = 'https://api.github.com/gists'
-SESSIONS_STORAGE = expanduser('~') + '/.pysession.pickle'
+SESSIONS_STORAGE = join(expanduser('~'), '.pysession.pickle')
 LAST_GISTS = '\033[95m    LAST 5 EXPORTED GISTS: \n\033[0m'
+BANNER_GIST = "This interpreter session will be saved to a secret Gist.\n"
+BANNER_LOCAL = "This interpreter session will be saved to a local file.\n"
+BANNER_OFF = "This interpreter session will not be saved.\n"
+BANNER_DISABLE = "You can disable saving this session by typing \033[1mPySession.off()\033[0m\033[95m.\n"
+BANNER_ENABLE = "You can enable saving this session type \033[1mPySession.on()\033[0m\033[95m.\n"
+BANNER_SWITCH = """\
+To switch between saving the session locally on your disk or
+as a secret Gist type \033[1mPySession.local()\033[0m\033[95m resp. \033[1mPySession.gist()\033[0m\033[95m.
+"""
 
 
 class PySession(object):
@@ -43,27 +53,35 @@ class PySession(object):
     previous_sessions = []
 
     @classmethod
+    def on(cls):
+        """Turn on saving for this particular shell session."""
+        cls.save = True
+
+    @classmethod
     def off(cls):
-        """ Turns off saving for this particular shell session """
+        """Turn off saving for this particular shell session."""
         cls.save = False
 
     @classmethod
     def local(cls):
-        """ Switch to saving the current session to a local file """
+        """Switch to saving the current session to a local file."""
         cls.save_locally = True
 
     @classmethod
-    def save_to_file(cls, data, filename=None):
-        """Saves the session code to a local file in current directory"""
-        filename = filename or 'session.py'
+    def gist(cls):
+        """Switch to saving the current session to a secret gist."""
+        cls.save_locally = False
+
+    @classmethod
+    def save_to_file(cls, data, filename):
+        """Saves the session code to a local file in current directory."""
         file_p = io.open(filename, 'wb')
         file_p.write(data)
         file_p.close()
 
     @classmethod
-    def save_to_gist(cls, data, filename=None):
-        """Creates a secret GitHub Gist with the provided data and filename"""
-        filename = filename or 'session.py'
+    def save_to_gist(cls, data, filename):
+        """Create a secret GitHub Gist with the provided data and filename."""
         date = datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")
         gist = {
             'description': GIST_DESCRIPTION + date,
@@ -82,13 +100,15 @@ class PySession(object):
 
     @classmethod
     def load_history_urls(cls):
-        """ Loads Gist URLs of past sessions from a pickle file """
+        """Loads Gist URLs of past sessions from a pickle file."""
         if isfile(SESSIONS_STORAGE):
             PySession.previous_sessions = pickle.load(
                 io.open(SESSIONS_STORAGE, 'rb'))
-        stdout.write(LAST_GISTS)
-        for session_url in PySession.previous_sessions:
-            stdout.write('\t' + session_url + '\n')
+
+        if PySession.previous_sessions:
+            stdout.write(LAST_GISTS)
+            for session_url in PySession.previous_sessions:
+                stdout.write('\t' + session_url + '\n')
 
     @classmethod
     def save_gist_url(cls, url):
@@ -99,13 +119,24 @@ class PySession(object):
 
 
 def init():
-    stdout.write('''
-    \033[95m
-    -----------------------------------------------\n
-    This interpreter session will be saved to a secret Gist.\n
-    You can stop saving this session by typing \033[1mPySession.off()\033[0m\033[95m\n
-    To save locally on your disk instead of Gist type \033[1mPySession.local()\033[0m\033[95m\n
-    ------------------------------------------------\n\033[0m''')
+    stdout.write("\033[95m----------------------------------------------------------------\n")
+    if os.getenv('PYSESSION_SAVE_OFF'):
+        PySession.off()
+        stdout.write(BANNER_OFF)
+    elif os.getenv('PYSESSION_SAVE_LOCALLY'):
+        PySession.local()
+        stdout.write(BANNER_LOCAL)
+    else:
+        stdout.write(BANNER_GIST)
+
+    if os.getenv('PYSESSION_SAVE_OFF'):
+        stdout.write(BANNER_ENABLE)
+    else:
+        stdout.write(BANNER_DISABLE)
+
+    stdout.write(BANNER_SWITCH)
+    stdout.write("----------------------------------------------------------------\033[0m\n")
+
 
     PySession.load_history_urls()
     try:
@@ -170,22 +201,24 @@ def before_exit():
         stdout.write(DO_NOTHING)
         return
 
+    filename = expanduser(os.getenv('PYSESSION_FILENAME', 'session.py'))
+
     if PySession.save_locally:
-        stdout.write(SAVING_FILE)
-        PySession.save_to_file('\n'.join(lines_of_code))
+        stdout.write(SAVING_FILE.format(filename=filename))
+        PySession.save_to_file('\n'.join(lines_of_code), filename)
         stdout.write(SUCCESS)
         return
 
     try:
-        stdout.write(SAVING_GIST)
-        gist_response = PySession.save_to_gist('\n'.join(lines_of_code))
+        stdout.write(SAVING_GIST.format(filename=filename))
+        gist_response = PySession.save_to_gist('\n'.join(lines_of_code), filename)
         gist_url = gist_response['html_url']
         PySession.save_gist_url(gist_url)
         webbrowser.open_new_tab(gist_url)
         stdout.write(SUCCESS)
     except:
         stdout.write(FAILED)
-        PySession.save_to_file('\n'.join(lines_of_code))
+        PySession.save_to_file('\n'.join(lines_of_code), filename)
 
 
 init()
